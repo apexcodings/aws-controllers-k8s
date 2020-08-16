@@ -686,11 +686,89 @@ appropriately (still TODO).</p>
 step from happening by passing the <code>-p</code> (for "preserve") flag to the
 <code>scripts/kind-build-test.sh</code> script or by <code>make kind-cluster-preserve SERVICE=ecr</code>.</p>
 <p>Finally, if you would like to do functional testing, where you would like to create a AWS Services 
-in your account using <code>KinD</code> cluster, please use <code>-r</code> and pass in <code>AWS ROLE ARN</code> to <code>scripts/kind-build-test.sh</code> script or
+in your account using <code>KinD</code> cluster, use <code>-r</code> and pass in <code>AWS ROLE ARN</code> to <code>scripts/kind-build-test.sh</code> script or
 <code>make kind-cluster-functional SERVICE=ecr ROLE_ARN=arn:aws:iam::12345678980:role/Admin-k8s</code></p>
-<p>Note: For above functional test, <code>sts-assume-role.sh</code> under <code>scripts/lib</code> directory will 
-make <code>aws sts assume-role --role-session-arn $AWS_ROLE_ARN --role-session-name $TEMP_ROLE</code> API call to fetch <code>AWS_ACCESS_KEY_ID</code>, 
-<code>AWS_SECRET_ACCESS_KEY</code>, <code>AWS_SESSION_TOKEN</code> variable and inject them as secrets to the deployment. The duration of the session token is 900 seconds (15 minutes)</p>
+<div class="admonition info">
+<p class="admonition-title">Info</p>
+<p>For above functional testing, <code>generate_temp_creds</code> function under <code>scripts/lib/aws.sh</code> script will 
+ make <code>aws sts assume-role --role-session-arn $AWS_ROLE_ARN --role-session-name $TEMP_ROLE</code> API call 
+ to fetch <code>AWS_ACCESS_KEY_ID</code>, <code>AWS_SECRET_ACCESS_KEY</code>, <code>AWS_SESSION_TOKEN</code>. 
+ The duration of the session token is 900 seconds (15 minutes). These variables will be added as Environment variables to the controller (deployment). </p>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The IAM user should be able to assume the role passed above else we can generate temporary credentials. 
+Make sure the trust relationship in the role has <code>sts:assume-role</code> permission. </p>
+</div>
+<ul>
+<li>To verify which IAM entity is making assume role API call, run <code>aws sts get-caller-identity</code> command:</li>
+</ul>
+<table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre>1</pre></div></td><td class="code"><div class="codehilite"><pre><span></span><code><span class="err">aws sts get-caller-identity</span>
+</code></pre></div>
+</td></tr></table>
+
+<ul>
+<li>Check if the above returned IAM entity has necessary permissions to make assume role API call. 
+  The contents of the example-role-trust-policy.json file should be similar to this:    </li>
+</ul>
+<table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
+ 2
+ 3
+ 4
+ 5
+ 6
+ 7
+ 8
+ 9
+10</pre></div></td><td class="code"><div class="codehilite"><pre><span></span><code><span class="p">{</span>
+    <span class="nt">&quot;Version&quot;</span><span class="p">:</span> <span class="s2">&quot;2012-10-17&quot;</span><span class="p">,</span>
+    <span class="nt">&quot;Statement&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="nt">&quot;Effect&quot;</span><span class="p">:</span> <span class="s2">&quot;Allow&quot;</span><span class="p">,</span>
+        <span class="nt">&quot;Principal&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="nt">&quot;AWS&quot;</span><span class="p">:</span> <span class="s2">&quot;arn:aws:iam::12345678970:user/kubernetes&quot;</span>
+        <span class="p">},</span>
+        <span class="nt">&quot;Action&quot;</span><span class="p">:</span> <span class="s2">&quot;sts:AssumeRole&quot;</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div>
+</td></tr></table>
+
+<p>If you do not have a role, run below commands to create a role, add the trust relationship to the role along with a sample policy arn which has ECR full permissions. 
+If you have a role, verify your role has below trust relationship. </p>
+<table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
+ 2
+ 3
+ 4
+ 5
+ 6
+ 7
+ 8
+ 9
+10
+11
+12</pre></div></td><td class="code"><div class="codehilite"><pre><span></span><code><span class="err">cat</span> <span class="err">&gt;</span> <span class="err">example-role-trust-policy.json</span> <span class="err">&lt;&lt;</span> <span class="err">EOF</span>
+<span class="p">{</span>
+    <span class="nt">&quot;Version&quot;</span><span class="p">:</span> <span class="s2">&quot;2012-10-17&quot;</span><span class="p">,</span>
+    <span class="nt">&quot;Statement&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="nt">&quot;Effect&quot;</span><span class="p">:</span> <span class="s2">&quot;Allow&quot;</span><span class="p">,</span>
+        <span class="nt">&quot;Principal&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="nt">&quot;AWS&quot;</span><span class="p">:</span> <span class="s2">&quot;arn:aws:iam::12345678970:user/kubernetes&quot;</span>
+        <span class="p">},</span>
+        <span class="nt">&quot;Action&quot;</span><span class="p">:</span> <span class="s2">&quot;sts:AssumeRole&quot;</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+<span class="err">EOF</span> 
+</code></pre></div>
+</td></tr></table>
+
+<table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre>1</pre></div></td><td class="code"><div class="codehilite"><pre><span></span><code><span class="err">aws iam create-role --role-name example-role --assume-role-policy-document file://example-role-trust-policy.json</span>
+</code></pre></div>
+</td></tr></table>
+
+<table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre>1</pre></div></td><td class="code"><div class="codehilite"><pre><span></span><code><span class="err">aws iam attach-role-policy --role-name example-role --policy-arn &quot;arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryFullAccess&quot;</span>
+</code></pre></div>
+</td></tr></table>
+
 <div class="admonition tip">
 <p class="admonition-title">Tracking testing</p>
 <p>We track testing in the umbrella <a href="https://github.com/aws/aws-controllers-k8s/issues/6">issue 6</a>.
