@@ -757,7 +757,7 @@ which in turn requires Docker.</p>
 <p class="admonition-title">Footprint</p>
 <p>When you run the <code>scripts/kind-build-test.sh</code> script the first time,
 the step that builds the container image for the target ACK service
-controller can 40 or more minutes. This is because the container image
+controller can take up to 40 or more minutes. This is because the container image
 contains a lot of dependencies. Once you successfully build the target
 image this base image layer is cached locally, and the build takes a much 
 shorter amount of time. We are aware of this (and the storage footprint,
@@ -790,7 +790,7 @@ building the code generator.</p>
 </td></tr></table>
 
 <div class="admonition note">
-<p class="admonition-title">Note</p>
+<p class="admonition-title">One-off build</p>
 <p>You only have to do this once, overall. In other words: unless we change
 something upstream in terms of the code generation process, this is 
 a one-off operation. Internally, the Makefile executes an <code>go build</code> here.</p>
@@ -863,18 +863,18 @@ using the following commands:</p>
  9
 10
 11
-12</pre></div></td><td class="code"><div class="codehilite"><pre><span></span><code>$ cat &gt; trust-policy.json <span class="s">&lt;&lt; EOF</span>
-<span class="s">{</span>
-<span class="s">    &quot;Version&quot;: &quot;2012-10-17&quot;,</span>
-<span class="s">    &quot;Statement&quot;: {</span>
-<span class="s">        &quot;Effect&quot;: &quot;Allow&quot;,</span>
-<span class="s">        &quot;Principal&quot;: {</span>
-<span class="s">            &quot;AWS&quot;: &quot;$ACK_TEST_PRINCIPAL_ARN&quot;</span>
-<span class="s">        },</span>
-<span class="s">        &quot;Action&quot;: &quot;sts:AssumeRole&quot;</span>
-<span class="s">    }</span>
-<span class="s">}</span>
-<span class="s">EOF</span> 
+12</pre></div></td><td class="code"><div class="codehilite"><pre><span></span><code><span class="err">cat &gt; trust-policy.json &lt;&lt; EOF</span>
+<span class="err">{</span>
+<span class="err">    &quot;Version&quot;: &quot;2012-10-17&quot;,</span>
+<span class="err">    &quot;Statement&quot;: {</span>
+<span class="err">        &quot;Effect&quot;: &quot;Allow&quot;,</span>
+<span class="err">        &quot;Principal&quot;: {</span>
+<span class="err">            &quot;AWS&quot;: &quot;$ACK_TEST_PRINCIPAL_ARN&quot;</span>
+<span class="err">        },</span>
+<span class="err">        &quot;Action&quot;: &quot;sts:AssumeRole&quot;</span>
+<span class="err">    }</span>
+<span class="err">}</span>
+<span class="err">EOF </span>
 </code></pre></div>
 </td></tr></table>
 
@@ -927,14 +927,14 @@ To generate the IAM role ARN, do:</p>
 <p>Before you proceed, make sure that you've done the IAM setup in the previous
 step.</p>
 <div class="admonition warning">
-<p class="admonition-title">Warning</p>
+<p class="admonition-title">IAM troubles?!</p>
 <p>If you try the following command and you see an error message containing
 something along the line of <code>AWS_ROLE_ARN is not defined.</code> then you know
 that somewhere in the IAM setup you either left out a step or one of the
 commands failed.</p>
 </div>
 <p>Now we're finally in the position to execute the end-to-end test:</p>
-<table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre>1</pre></div></td><td class="code"><div class="codehilite"><pre><span></span><code><span class="err">make kind-cluster SERVICE=$SERVICE</span>
+<table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre>1</pre></div></td><td class="code"><div class="codehilite"><pre><span></span><code><span class="err">make kind-test SERVICE=$SERVICE</span>
 </code></pre></div>
 </td></tr></table>
 
@@ -1035,11 +1035,6 @@ the following (edited down to the relevant parts):</p>
 <p>As you can see, in above case the end-to-end test (creating cluster, deploying
 ACK, applying custom resources, and tear-down) took less than 30 seconds. This
 is for the warmed caches case.</p>
-<div class="admonition tip">
-<p class="admonition-title">Keeping the test cluster around</p>
-<p>By default the script deletes the <code>kind</code> cluster. You can prevent this last
-step from happening by usign <code>make kind-cluster-preserve SERVICE=$SERVICE</code>.</p>
-</div>
 <h3 id="background">Background<a class="headerlink" href="#background" title="Permanent link">&para;</a></h3>
 <p>We use <a href="https://github.com/vektra/mockery">mockery</a> for unit testing.
 You can install it by following the guideline on mockery's GitHub or simply
@@ -1049,10 +1044,8 @@ Linux environments.</p>
  on GitHub. Use this issue as a starting point and if you create a new
  testing-related issue, mention it from there.</p>
 <h2 id="clean-up">Clean up<a class="headerlink" href="#clean-up" title="Permanent link">&para;</a></h2>
-<p>If you used the <code>make kind-cluster-preserve</code> command, the <code>kind</code> cluster (Docker
-containers) are still around after the test run. To clean up a <code>kind</code> cluster, 
-which includes all the container images and configuration files created by 
-the script specifically for said test cluster, execute:</p>
+<p>To clean up a <code>kind</code> cluster, including the container images and configuration 
+files created by the script specifically for said test cluster, execute:</p>
 <table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre>1</pre></div></td><td class="code"><div class="codehilite"><pre><span></span><code><span class="err">kind delete cluster --name $CLUSTER_NAME</span>
 </code></pre></div>
 </td></tr></table>
