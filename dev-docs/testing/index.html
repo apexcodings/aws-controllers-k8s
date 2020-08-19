@@ -907,7 +907,7 @@ we need to tell it to use the IAM role we created in the previous step.
 To generate the IAM role ARN, do:</p>
 <table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre>1
 2</pre></div></td><td class="code"><div class="codehilite"><pre><span></span><code><span class="err">AWS_ACCOUNT_ID=$(aws sts get-caller-identity --query &#39;Account&#39; --output text) &amp;&amp; \</span>
-<span class="err">export AWS_ROLE_ARN=arn:aws:iam::$AWS_ACCOUNT_ID/$ACK_TEST_IAM_ROLE</span>
+<span class="err">export AWS_ROLE_ARN=arn:aws:iam::$AWS_ACCOUNT_ID:role/$ACK_TEST_IAM_ROLE</span>
 </code></pre></div>
 </td></tr></table>
 
