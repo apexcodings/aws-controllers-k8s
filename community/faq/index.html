@@ -531,6 +531,20 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#cluster-api" class="md-nav__link">
+    Cluster API
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#cdk8s" class="md-nav__link">
+    cdk8s
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#contributing" class="md-nav__link">
     Contributing
   </a>
@@ -618,6 +632,20 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#cluster-api" class="md-nav__link">
+    Cluster API
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#cdk8s" class="md-nav__link">
+    cdk8s
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#contributing" class="md-nav__link">
     Contributing
   </a>
@@ -656,6 +684,43 @@
 <p>The service broker project is also an AWS activity that, with the general shift of focus in the community from service broker to operators, can be considered less actively developed. There are a certain things around application lifecycle management that the service broker currently covers and which are at this juncture not yet covered by the scope of ACK, however we expect in the mid to long run that these two projects converge. We had AWS-internal discussions with the team that maintains the service broker and we're on the same page concerning a unified solution.</p>
 <p>We appreciate input and advice concerning features that are currently covered by the service broker only, for example bind/unbind or cataloging and looking forward to learn from the community how they are using service broker so that we can take this into account.</p>
 </div>
+<h2 id="cluster-api">Cluster API<a class="headerlink" href="#cluster-api" title="Permanent link">&para;</a></h2>
+<div class="admonition question">
+<p class="admonition-title">Question</p>
+<p>Does the planned ACK service controller for EKS replace <a href="https://github.com/kubernetes-sigs/cluster-api">Kubernetes Cluster API</a>?</p>
+</div>
+<div class="admonition quote">
+<p class="admonition-title">Answer</p>
+<p>No, the ACK service controller for EKS does not replace Kubernetes Cluster API.
+Cluster API does a lot of really cool things and is designed to be a generic way to create Kubernetes clusters that run anywhere.
+It makes some different design decisions with that goal in mind.
+Some differences include:</p>
+<ul>
+<li>Cluster API is treated as your source of truth for all infrastructure.
+This means things like the cluster autoscaler need to be configured to use cluster api instead of AWS cloud provider.</li>
+<li>Generic Kubernetes clusters rely on running more services in the cluster and not services from AWS.
+Things like metrics and logging will likely need to run inside Kubernetes instead of using services like CloudWatch.</li>
+<li>IAM permission for Cluster-API Provider AWS (CAPA) need to be more broad than the ACK service controller for EKS because CAPA is responsible for provisioning everything needed for the cluster (VPC, gateway, etc).
+You don't need to run all of the ACK controllers if all you want is a way to provision an EKS cluster.
+You can pick and choose which ACK controllers you want to deploy.</li>
+<li>With the EKS ACK controller you will get all of the configuration flexibility of the EKS API including things like managed node groups and fargate.
+This is because the ACK service controller for EKS is built directly from the EKS API spec and not abstracted to be a general Kubernetes cluster.</li>
+</ul>
+</div>
+<h2 id="cdk8s">cdk8s<a class="headerlink" href="#cdk8s" title="Permanent link">&para;</a></h2>
+<div class="admonition question">
+<p class="admonition-title">Question</p>
+<p>How does ACK relate to <a href="https://cdk8s.io/">cdk8s</a>?</p>
+</div>
+<div class="admonition quote">
+<p class="admonition-title">Answer</p>
+<p>cdk8s is an open-source software development framework for defining Kubernetes applications and reusable abstractions using familiar programming languages and rich object-oriented APIs.
+You can use cdk8s to create any resource inside a Kubernetes cluster.
+This includes <a href="https://kubernetes.io/docs/concepts/extend-kubernetes/api-extension/custom-resources/">Custom Resources</a> (CRs).</p>
+<p>All of the ACK controllers watch for specific CRs and you can generate those resources using cdk8s or any Kubernetes tooling.
+The two projects complement each other.
+cdk8s can create the Kubernetes resources and ACK uses those resources to create the AWS infrastructure.</p>
+</div>
 <h2 id="contributing">Contributing<a class="headerlink" href="#contributing" title="Permanent link">&para;</a></h2>
 <div class="admonition question">
 <p class="admonition-title">Question</p>
@@ -664,7 +729,7 @@
 <div class="admonition quote">
 <p class="admonition-title">Answer</p>
 <p>Excellent question and we're super excited that you're interested in ACK.
-For now, if you're a developer, you can check out the <a href="https://github.com/aws/aws-controllers-k8s/tree/mvp">mvp</a> branch and try out the code generation.</p>
+For now, if you're a developer, you can check out the <a href="../../dev-docs/overview/">contributor docs</a>.</p>
 </div>
                 
               
